@@ -1,14 +1,10 @@
-import os
-from typing import TypedDict
+import operator
+from typing import Annotated, TypedDict
 from langgraph.graph import StateGraph, END
-from langchain_ibm import ChatWatsonx
 from langchain_core.messages import HumanMessage, SystemMessage
-from pydantic import SecretStr
 from agents.research_agent import run_research
 from agents.rag_agent import run_rag
-
-LLAMA4 = "meta-llama/llama-4-maverick-17b-128e-instruct-fp8"
-LLAMA3 = "meta-llama/llama-3-3-70b-instruct"
+from utils.watsonx import get_llm, LLAMA4, LLAMA3
 
 
 class AgentState(TypedDict):
@@ -20,16 +16,7 @@ class AgentState(TypedDict):
     rag_context: str
     chunks_used: int
     answer: str
-    sources: list[str]
-
-
-def _get_llm(model_id: str) -> ChatWatsonx:
-    return ChatWatsonx(
-        model_id=model_id,
-        url=SecretStr(os.environ["WATSONX_URL"]),
-        apikey=SecretStr(os.environ["WATSONX_API_KEY"]),
-        project_id=os.environ["WATSONX_PROJECT_ID"],
-    )
+    sources: Annotated[list[str], operator.add]
 
 
 def classify_node(state: AgentState) -> dict:
@@ -45,9 +32,9 @@ def classify_node(state: AgentState) -> dict:
         HumanMessage(content=state["query"]),
     ]
     try:
-        response = _get_llm(LLAMA4).invoke(messages)
+        response = get_llm(LLAMA4).invoke(messages)
     except Exception:
-        response = _get_llm(LLAMA3).invoke(messages)
+        response = get_llm(LLAMA3).invoke(messages)
 
     intent = str(response.content).strip().lower()
     if intent not in ("research", "rag", "both"):
@@ -67,16 +54,20 @@ def _route(state: AgentState) -> list[str]:
 def research_node(state: AgentState) -> dict:
     return {
         "research_context": run_research(state["ticker"]),
-        "sources": state.get("sources", []) + ["news", "analyst"],
+        "sources": ["news", "analyst"],
     }
 
 
 def rag_node(state: AgentState) -> dict:
-    context, chunks = run_rag(state["ticker"], state["query"])
+    try:
+        context, chunks = run_rag(state["ticker"], state["query"])
+    except Exception as e:
+        print(f"[rag_agent] retrieval failed: {e}")
+        context, chunks = "", 0
     return {
         "rag_context": context,
         "chunks_used": chunks,
-        "sources": state.get("sources", []) + ["mda", "financials"],
+        "sources": ["mda", "financials"] if context else [],
     }
 
 
@@ -95,9 +86,9 @@ def synthesize_node(state: AgentState) -> dict:
         HumanMessage(content=f"Context:\n\n{chr(10).join(parts)}\n\nQuestion: {state['query']}"),
     ]
     try:
-        response = _get_llm(LLAMA4).invoke(messages)
+        response = get_llm(LLAMA4).invoke(messages)
     except Exception:
-        response = _get_llm(LLAMA3).invoke(messages)
+        response = get_llm(LLAMA3).invoke(messages)
 
     return {"answer": str(response.content)}
 
@@ -131,7 +122,7 @@ async def run_supervisor(ticker: str, query: str, history: list) -> dict:
         "rag_context": "",
         "chunks_used": 0,
         "answer": "",
-        "sources": [],
+        "sources": [],  # Annotated reducer — LangGraph appends to this
     }
     result = await _graph.ainvoke(state)
     return {

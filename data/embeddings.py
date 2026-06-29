@@ -1,29 +1,24 @@
 import os
 from datetime import date
-from pinecone import Pinecone
-from langchain_ibm import WatsonxEmbeddings
-from ibm_watsonx_ai.metanames import EmbedTextParamsMetaNames
-from pydantic import SecretStr
-from data.yfinance_client import get_financials, get_news, get_analyst_ratings
+from pinecone import Pinecone, ServerlessSpec
+from data.yfinance_client import get_financials
 from data.sec_edgar import get_mda
 from utils.cache import get_cache, set_cache
+from utils.watsonx import get_embedder
 
 INDEX_NAME = "stock-dashboard"
 
 
 def _get_index():
     pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
+    if INDEX_NAME not in [i.name for i in pc.list_indexes()]:
+        pc.create_index(
+            name=INDEX_NAME,
+            dimension=768,
+            metric="cosine",
+            spec=ServerlessSpec(cloud="aws", region="us-east-1"),
+        )
     return pc.Index(INDEX_NAME)
-
-
-def _get_embedder() -> WatsonxEmbeddings:
-    return WatsonxEmbeddings(
-        model_id="ibm/slate-125m-english-rtrvr",
-        url=SecretStr(os.environ["WATSONX_URL"]),
-        apikey=SecretStr(os.environ["WATSONX_API_KEY"]),
-        project_id=os.environ["WATSONX_PROJECT_ID"],
-        params={EmbedTextParamsMetaNames.TRUNCATE_INPUT_TOKENS: 512},
-    )
 
 
 def _chunk(text: str, size: int = 400, overlap: int = 40) -> list[str]:
@@ -54,7 +49,7 @@ def embed_ticker(ticker: str) -> None:
         return
 
     index = _get_index()
-    embedder = _get_embedder()
+    embedder = get_embedder()
     today = date.today().isoformat()
 
     # Financials
@@ -90,41 +85,6 @@ def embed_ticker(ticker: str) -> None:
             },
             namespace=ticker,
         )
-
-    # News headlines
-    for article in get_news(ticker).get("articles", []):
-        title = article.get("title")
-        if title:
-            _upsert(
-                index,
-                embedder,
-                [title],
-                {
-                    "ticker": ticker,
-                    "source": "news",
-                    "date": article.get("date", today),
-                    "document_type": "News Article",
-                    "title": title,
-                },
-                namespace=ticker,
-            )
-
-    # Analyst ratings
-    ratings = get_analyst_ratings(ticker)
-    ratings_text = " ".join(f"{k}: {v}" for k, v in ratings.items())
-    _upsert(
-        index,
-        embedder,
-        [ratings_text],
-        {
-            "ticker": ticker,
-            "source": "analyst",
-            "date": today,
-            "document_type": "Analyst Rating",
-            "title": f"{ticker} Analyst Ratings",
-        },
-        namespace=ticker,
-    )
 
     set_cache(f"embedded_{ticker}", {"embedded": True})
 

@@ -61,16 +61,21 @@ def get_mda(ticker: str) -> dict:
 
     text = BeautifulSoup(resp.text, "html.parser").get_text(separator="\n")
     lower = text.lower()
-    start = lower.find("management’s discussion")
-    if start == -1:
-        start = lower.find("management's discussion")
-    end = lower.find("quantitative and qualitative", start + 1) if start != -1 else -1
 
-    if start != -1 and end != -1:
-        mda_text = text[start:end].strip()
-    elif start != -1:
-        mda_text = text[start : start + 8000].strip()
-    else:
+    mda_text = ""
+    search_from = 0
+    while True:
+        start = lower.find("management’s discussion", search_from)
+        if start == -1:
+            break
+        end = lower.find("quantitative and qualitative", start + 1)
+        candidate = text[start:end].strip() if end != -1 else text[start : start + 8000].strip()
+        if len(candidate) > 500:
+            mda_text = candidate
+            break
+        search_from = start + 1
+
+    if not mda_text:
         mda_text = text[:8000].strip()
 
     data = {
