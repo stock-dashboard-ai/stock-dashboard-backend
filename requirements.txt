@@ -41,7 +41,7 @@ ormsgpack==1.12.2
 packaging==26.2
 pandas==2.3.3
 peewee==4.1.1
-pinecone-client==6.0.0
+pinecone==6.0.0
 pinecone-plugin-interface==0.0.7
 platformdirs==4.10.0
 protobuf==7.35.1

@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: stock-dashboard-backend
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: WATSONX_API_KEY
+        sync: false
+      - key: WATSONX_PROJECT_ID
+        sync: false
+      - key: WATSONX_URL
+        value: https://us-south.ml.cloud.ibm.com
+      - key: PINECONE_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: stock-dashboard-db
+          property: connectionString
+
+databases:
+  - name: stock-dashboard-db
+    plan: free
