@@ -1,5 +1,6 @@
 import os
 from datetime import date
+import traceback
 from pinecone import Pinecone, ServerlessSpec
 from data.yfinance_client import get_financials
 from data.sec_edgar import get_mda
@@ -94,4 +95,7 @@ def embed_all_tickers(tickers: list[str]) -> None:
         try:
             embed_ticker(ticker)
         except Exception as e:
-            print(f"[embeddings] failed to embed {ticker}: {e}")
+            print(f"[embeddings] failed to embed {ticker}")
+            print(f"  type: {type(e).__name__}")
+            print(f"  error: {str(e)}")
+            print(f"  traceback: {traceback.format_exc()}")
