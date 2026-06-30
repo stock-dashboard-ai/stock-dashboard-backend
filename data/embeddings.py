@@ -4,7 +4,7 @@ import traceback
 from pinecone import Pinecone, ServerlessSpec
 from data.yfinance_client import get_financials
 from data.sec_edgar import get_mda
-from utils.cache import get_cache, set_cache
+import utils.db as db
 from utils.watsonx import get_embedder
 
 INDEX_NAME = "stock-dashboard"
@@ -46,7 +46,7 @@ def _upsert(index, embedder, chunks: list[str], meta: dict, namespace: str):
 
 
 def embed_ticker(ticker: str) -> None:
-    if get_cache(f"embedded_{ticker}"):
+    if db.get_embedded(ticker):
         return
 
     index = _get_index()
@@ -87,7 +87,7 @@ def embed_ticker(ticker: str) -> None:
             namespace=ticker,
         )
 
-    set_cache(f"embedded_{ticker}", {"embedded": True})
+    db.set_embedded(ticker)
 
 
 def embed_all_tickers(tickers: list[str]) -> None:

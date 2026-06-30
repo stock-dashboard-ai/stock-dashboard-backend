@@ -1,7 +1,7 @@
 import operator
 from typing import Annotated, TypedDict
 from langgraph.graph import StateGraph, END
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from agents.research_agent import run_research
 from agents.rag_agent import run_rag
 from utils.watsonx import get_llm, LLAMA4, LLAMA3
@@ -83,8 +83,15 @@ def synthesize_node(state: AgentState) -> dict:
             f"You are a financial research assistant. Use the provided context about "
             f"{state['ticker']} to answer the user's question accurately and concisely."
         )),
-        HumanMessage(content=f"Context:\n\n{chr(10).join(parts)}\n\nQuestion: {state['query']}"),
     ]
+
+    for turn in state.get("history", []):
+        if turn.get("role") == "user":
+            messages.append(HumanMessage(content=turn["content"]))
+        elif turn.get("role") == "assistant":
+            messages.append(AIMessage(content=turn["content"]))
+
+    messages.append(HumanMessage(content=f"Context:\n\n{chr(10).join(parts)}\n\nQuestion: {state['query']}"))
     try:
         response = get_llm(LLAMA4).invoke(messages)
     except Exception:

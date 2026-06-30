@@ -1,6 +1,8 @@
 import pandas as pd
 import yfinance as yf
-from utils.cache import get_cache, set_cache
+import utils.db as db
+
+_financials_cache: dict = {}
 
 
 def _ticker(symbol: str) -> yf.Ticker:
@@ -55,10 +57,12 @@ def get_earnings_estimates(ticker: str) -> dict:
 
 
 def get_financials(ticker: str) -> dict:
-    cache_key = f"financials_{ticker}"
-    cached = get_cache(cache_key)
-    if cached:
-        return cached
+    if ticker in _financials_cache:
+        return _financials_cache[ticker]
+    row = db.get_financials(ticker)
+    if row:
+        _financials_cache[ticker] = row
+        return row
     info = _ticker(ticker).info
     data = {
         "name": info.get("longName"),
@@ -73,7 +77,8 @@ def get_financials(ticker: str) -> dict:
         "52w_high": info.get("fiftyTwoWeekHigh"),
         "52w_low": info.get("fiftyTwoWeekLow"),
     }
-    set_cache(cache_key, data)
+    db.set_financials(ticker, data)
+    _financials_cache[ticker] = data
     return data
 
 
@@ -92,10 +97,4 @@ def get_news(ticker: str) -> dict:
 
 
 def get_info(ticker: str) -> dict:
-    cache_key = f"info_{ticker}"
-    cached = get_cache(cache_key)
-    if cached:
-        return cached
-    data = _ticker(ticker).info
-    set_cache(cache_key, data)
-    return data
+    return _ticker(ticker).info

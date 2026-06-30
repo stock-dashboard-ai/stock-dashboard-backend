@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from utils.cache import get_cache, set_cache
+import utils.db as db
 
 HEADERS = {"User-Agent": "stock-dashboard jinkimcs@gmail.com"}
 
@@ -41,8 +41,7 @@ def _get_latest_10q_path(cik: int) -> tuple[str | None, str | None]:
 
 
 def get_mda(ticker: str) -> dict:
-    cache_key = f"mda_{ticker}"
-    cached = get_cache(cache_key)
+    cached = db.get_mda(ticker)
     if cached:
         return cached
 
@@ -69,7 +68,9 @@ def get_mda(ticker: str) -> dict:
         if start == -1:
             break
         end = lower.find("quantitative and qualitative", start + 1)
-        candidate = text[start:end].strip() if end != -1 else text[start : start + 8000].strip()
+        candidate = (
+            text[start:end].strip() if end != -1 else text[start : start + 8000].strip()
+        )
         if len(candidate) > 500:
             mda_text = candidate
             break
@@ -83,5 +84,5 @@ def get_mda(ticker: str) -> dict:
         "preview": mda_text[:500],
         "full_text": mda_text,
     }
-    set_cache(cache_key, data)
+    db.set_mda(ticker, data["filing_date"], data["preview"], data["full_text"])
     return data

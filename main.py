@@ -1,9 +1,11 @@
+import asyncio
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import stock, chat
 from data.embeddings import embed_all_tickers
+from utils.db import init_db
 
 load_dotenv()
 
@@ -16,7 +18,8 @@ TICKERS = [
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    embed_all_tickers(TICKERS)
+    init_db()
+    asyncio.create_task(asyncio.to_thread(embed_all_tickers, TICKERS))
     yield
 
 
