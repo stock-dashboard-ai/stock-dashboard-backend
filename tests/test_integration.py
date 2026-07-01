@@ -107,7 +107,7 @@ def test_all_endpoints(client):
         json={
             "ticker": TICKER,
             "query": "What do analysts think about this stock and what does the MD&A say about risks?",
-            "history": [],
+            "session_id": "integration-test-session",
         },
     )
     assert r.status_code == 200, r.text

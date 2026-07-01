@@ -164,8 +164,10 @@ def test_mda_invalid_ticker(mock, client):
 # --- POST /chat ---
 
 @patch("routers.chat.run_supervisor", new_callable=AsyncMock, return_value=MOCK_CHAT)
-def test_chat(mock, client):
-    r = client.post("/chat", json={"ticker": "NVDA", "query": "How is NVDA doing?", "history": []})
+@patch("routers.chat.db.append_chat_turn")
+@patch("routers.chat.db.get_chat_history", return_value=[])
+def test_chat(mock_history, mock_append, mock, client):
+    r = client.post("/chat", json={"ticker": "NVDA", "query": "How is NVDA doing?", "session_id": "test-session-1"})
     assert r.status_code == 200
     data = r.json()
     assert "answer" in data and "sources" in data and "chunks_used" in data
@@ -174,11 +176,13 @@ def test_chat(mock, client):
 
 @patch("routers.chat.run_supervisor", new_callable=AsyncMock, return_value=MOCK_CHAT)
 def test_chat_invalid_ticker(mock, client):
-    r = client.post("/chat", json={"ticker": "FAKE", "query": "test", "history": []})
+    r = client.post("/chat", json={"ticker": "FAKE", "query": "test", "session_id": "test-session-2"})
     assert r.status_code == 404
 
 
 @patch("routers.chat.run_supervisor", new_callable=AsyncMock, return_value=MOCK_CHAT)
-def test_chat_lowercase_ticker(mock, client):
-    r = client.post("/chat", json={"ticker": "nvda", "query": "How is NVDA doing?", "history": []})
+@patch("routers.chat.db.append_chat_turn")
+@patch("routers.chat.db.get_chat_history", return_value=[])
+def test_chat_lowercase_ticker(mock_history, mock_append, mock, client):
+    r = client.post("/chat", json={"ticker": "nvda", "query": "How is NVDA doing?", "session_id": "test-session-3"})
     assert r.status_code == 200

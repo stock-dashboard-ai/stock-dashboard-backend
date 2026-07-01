@@ -1,7 +1,7 @@
 """Pydantic response models used to give the Swagger/OpenAPI docs concrete
 schemas and field descriptions."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PriceHistory(BaseModel):
@@ -13,14 +13,15 @@ class PriceHistory(BaseModel):
     )
     volumes: list[int] = Field(..., description="Trading volume for each date.")
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "dates": ["2025-06-30", "2025-07-01"],
                 "closes": [134.5, 136.2],
                 "volumes": [245312000, 198765000],
             }
         }
+    )
 
 
 class AnalystRatings(BaseModel):
@@ -34,8 +35,8 @@ class AnalystRatings(BaseModel):
         ..., description="Number of analysts rating the stock 'strong sell'."
     )
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "strong_buy": 10,
                 "buy": 8,
@@ -44,6 +45,7 @@ class AnalystRatings(BaseModel):
                 "strong_sell": 0,
             }
         }
+    )
 
 
 class PriceTargets(BaseModel):
@@ -53,8 +55,8 @@ class PriceTargets(BaseModel):
     high: float | None = Field(None, description="Highest analyst price target.")
     median: float | None = Field(None, description="Median analyst price target.")
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "current": 800,
                 "low": 600,
@@ -63,6 +65,7 @@ class PriceTargets(BaseModel):
                 "median": 840,
             }
         }
+    )
 
 
 class EPSEstimate(BaseModel):
@@ -120,9 +123,9 @@ class FinancialsSnapshot(BaseModel):
         None, alias="52w_low", description="52-week low price."
     )
 
-    class Config:
-        populate_by_name = True
-        json_schema_extra = {
+    model_config = ConfigDict(
+        populate_by_name=True,
+        json_schema_extra={
             "example": {
                 "name": "NVIDIA Corporation",
                 "sector": "Technology",
@@ -136,7 +139,8 @@ class FinancialsSnapshot(BaseModel):
                 "52w_high": 153.13,
                 "52w_low": 86.62,
             }
-        }
+        },
+    )
 
 
 class NewsArticle(BaseModel):
@@ -181,14 +185,15 @@ class ChatResponse(BaseModel):
         description="Number of Pinecone chunks retrieved by the RAG agent for this answer (0 if the RAG agent was not invoked).",
     )
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "answer": "Analysts are broadly positive on NVDA, with 10 strong buy and 8 buy ratings...",
                 "sources": ["analyst", "news"],
                 "chunks_used": 5,
             }
         }
+    )
 
 
 class HealthResponse(BaseModel):

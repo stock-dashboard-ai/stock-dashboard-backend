@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from agents.supervisor import run_supervisor
 from routers.schemas import ChatResponse
 import utils.db as db
@@ -42,14 +42,15 @@ class ChatRequest(BaseModel):
         examples=["b3b1f6b0-6e9f-4b8b-9b0a-2f6f1a4c2e11"],
     )
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "ticker": "NVDA",
                 "query": "What do analysts think about NVDA and does recent news support that view?",
                 "session_id": "b3b1f6b0-6e9f-4b8b-9b0a-2f6f1a4c2e11",
             }
         }
+    )
 
 
 @router.post(
