@@ -16,7 +16,7 @@ def init_db() -> None:
                     CREATE TABLE IF NOT EXISTS mda (
                         ticker TEXT PRIMARY KEY,
                         filing_date TEXT,
-                        preview TEXT,
+                        summary TEXT,
                         full_text TEXT
                     )
                 """)
@@ -49,12 +49,24 @@ def init_db() -> None:
         conn.close()
 
 
+def reset_all() -> None:
+    conn = _conn()
+    try:
+        with conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "TRUNCATE TABLE mda, financials, embedded, chat_history"
+                )
+    finally:
+        conn.close()
+
+
 def get_mda(ticker: str) -> dict | None:
     conn = _conn()
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
-                "SELECT filing_date, preview, full_text FROM mda WHERE ticker = %s",
+                "SELECT filing_date, summary, full_text FROM mda WHERE ticker = %s",
                 (ticker,),
             )
             row = cur.fetchone()
@@ -64,7 +76,7 @@ def get_mda(ticker: str) -> dict | None:
 
 
 def set_mda(
-    ticker: str, filing_date: str | None, preview: str | None, full_text: str | None
+    ticker: str, filing_date: str | None, summary: str | None, full_text: str | None
 ) -> None:
     conn = _conn()
     try:
@@ -72,14 +84,14 @@ def set_mda(
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    INSERT INTO mda (ticker, filing_date, preview, full_text)
+                    INSERT INTO mda (ticker, filing_date, summary, full_text)
                     VALUES (%s, %s, %s, %s)
                     ON CONFLICT (ticker) DO UPDATE SET
                         filing_date = EXCLUDED.filing_date,
-                        preview = EXCLUDED.preview,
+                        summary = EXCLUDED.summary,
                         full_text = EXCLUDED.full_text
                     """,
-                    (ticker, filing_date, preview, full_text),
+                    (ticker, filing_date, summary, full_text),
                 )
     finally:
         conn.close()

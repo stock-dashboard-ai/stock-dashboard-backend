@@ -163,8 +163,8 @@ class MDASummary(BaseModel):
         None,
         description="Filing date of the most recent 10-Q (YYYY-MM-DD). Null if no 10-Q is available (e.g. TSMC).",
     )
-    preview: str | None = Field(
-        None, description="First ~500 characters of the MD&A section."
+    summary: str | None = Field(
+        None, description="LLM-generated summary of the MD&A section."
     )
     full_text: str | None = Field(
         None, description="Full extracted text of the MD&A section."

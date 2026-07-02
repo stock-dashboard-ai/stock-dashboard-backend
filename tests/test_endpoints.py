@@ -17,7 +17,7 @@ MOCK_FINANCIALS = {
     "dividend_yield": 0.001, "52w_high": 140.0, "52w_low": 80.0,
 }
 MOCK_NEWS = {"articles": [{"title": "NVDA hits record", "publisher": "Reuters", "date": "2026-06-01", "url": "https://example.com"}]}
-MOCK_MDA = {"filing_date": "2026-05-01", "preview": "Revenue grew 80%...", "full_text": "Revenue grew 80% year over year..."}
+MOCK_MDA = {"filing_date": "2026-05-01", "summary": "Revenue grew 80%...", "full_text": "Revenue grew 80% year over year..."}
 MOCK_CHAT = {"answer": "NVDA looks strong.", "sources": ["news", "analyst"], "chunks_used": 3}
 
 
@@ -151,7 +151,7 @@ def test_mda(mock, client):
     r = client.get("/stock/NVDA/mda")
     assert r.status_code == 200
     data = r.json()
-    assert "filing_date" in data and "preview" in data and "full_text" in data
+    assert "filing_date" in data and "summary" in data and "full_text" in data
     assert data["filing_date"] == "2026-05-01"
 
 

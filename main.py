@@ -12,20 +12,11 @@ load_dotenv()
 
 TICKERS = [
     "NVDA",
-    "TSMC",
+    "TSM",
     "AAPL",
     "MSFT",
     "GOOGL",
     "META",
-    "TSLA",
-    "AMD",
-    "INTC",
-    "AMZN",
-    "ASML",
-    "ARM",
-    "QCOM",
-    "AVGO",
-    "AMAT",
 ]
 
 TAGS_METADATA = [
@@ -51,7 +42,7 @@ app = FastAPI(
     title="Stock Research Dashboard",
     description=(
         "AI-powered stock research dashboard API. Serves per-panel dashboard data for "
-        "15 pre-selected stocks (price, analyst ratings, price targets, earnings, "
+        "6 pre-selected stocks (price, analyst ratings, price targets, earnings, "
         "financials, news, MD&A) and a multi-agent chat endpoint grounded in that data."
     ),
     lifespan=lifespan,
