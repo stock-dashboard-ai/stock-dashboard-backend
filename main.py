@@ -12,11 +12,11 @@ load_dotenv()
 
 TICKERS = [
     "NVDA",
-    "TSM",
     "AAPL",
     "MSFT",
     "GOOGL",
     "META",
+    "TSLA",
 ]
 
 TAGS_METADATA = [
