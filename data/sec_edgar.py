@@ -1,9 +1,12 @@
+import re
 import requests
 from bs4 import BeautifulSoup
 import utils.db as db
 from utils.watsonx import get_llm
 
 HEADERS = {"User-Agent": "stock-dashboard jinkimcs@gmail.com"}
+
+MDA_ANCHOR = re.compile(r"item\s*2\.\s*management's discussion")
 
 # CIKs for all 6 tracked stocks.
 # Replace later with dynamic lookup from "https://www.sec.gov/files/company_tickers.json"
@@ -38,7 +41,9 @@ def _summarize_mda(ticker: str, text: str) -> str:
         f"Summarize the following Management's Discussion and Analysis (MD&A) "
         f"section from {ticker}'s latest 10-Q filing in 3-4 sentences for a stock "
         f"research dashboard. Focus on revenue, margins, and notable risks or "
-        f"trends. Do not add information not present in the text.\n\n{text}"
+        f"trends. Do not add information not present in the text. Output only "
+        f"the summary itself, with no preamble, introduction, or lead-in phrase."
+        f"\n\nMD&A Full Text:\n{text}"
     )
     response = get_llm().invoke(prompt)
     content = response.content
@@ -64,20 +69,20 @@ def get_mda(ticker: str) -> dict:
     resp.raise_for_status()
 
     text = BeautifulSoup(resp.text, "html.parser").get_text(separator="\n")
-    lower = text.lower().replace("’", "'")
+    lower = text.lower().replace("\xa0", " ").replace("’", "'")
 
-    start = lower.find("item 2. management's discussion")
-    if start == -1:
-        start = lower.find("management's discussion")
-
-    if start != -1:
+    mda_text = ""
+    for m in MDA_ANCHOR.finditer(lower):
+        start = m.start()
         end = lower.find("item 3.", start + 1)
-        if end == -1:
-            end = lower.find("quantitative and qualitative", start + 1)
-        mda_text = (
+        candidate = (
             text[start:end].strip() if end != -1 else text[start : start + 8000].strip()
         )
-    else:
+        if len(candidate) > 2000:
+            mda_text = candidate
+            break
+
+    if not mda_text:
         mda_text = text[:8000].strip()
 
     try:
