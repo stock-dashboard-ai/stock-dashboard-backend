@@ -161,7 +161,7 @@ class NewsSection(BaseModel):
 class MDASummary(BaseModel):
     filing_date: str | None = Field(
         None,
-        description="Filing date of the most recent 10-Q (YYYY-MM-DD). Null if no 10-Q is available (e.g. TSMC).",
+        description="Filing date of the most recent 10-Q (YYYY-MM-DD). Null if no 10-Q is available.",
     )
     summary: str | None = Field(
         None, description="LLM-generated summary of the MD&A section."

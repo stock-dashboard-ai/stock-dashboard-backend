@@ -1,34 +1,19 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 from agents.supervisor import run_supervisor
+from data.tickers import TRACKED_TICKERS
 from routers.schemas import ChatResponse
 import utils.db as db
 
 router = APIRouter(tags=["chat"])
 
-VALID_TICKERS = {
-    "NVDA",
-    "TSMC",
-    "AAPL",
-    "MSFT",
-    "GOOGL",
-    "META",
-    "TSLA",
-    "AMD",
-    "INTC",
-    "AMZN",
-    "ASML",
-    "ARM",
-    "QCOM",
-    "AVGO",
-    "AMAT",
-}
+VALID_TICKERS = set(TRACKED_TICKERS)
 
 
 class ChatRequest(BaseModel):
     ticker: str = Field(
         ...,
-        description="One of the 15 tracked tickers (case-insensitive).",
+        description="One of the 6 tracked tickers (case-insensitive).",
         examples=["NVDA"],
     )
     query: str = Field(

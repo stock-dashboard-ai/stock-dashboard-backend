@@ -8,6 +8,7 @@ from data.yfinance_client import (
     get_news,
 )
 from data.sec_edgar import get_mda
+from data.tickers import TRACKED_TICKERS
 from routers.schemas import (
     PriceHistory,
     AnalystRatings,
@@ -20,27 +21,11 @@ from routers.schemas import (
 
 router = APIRouter(prefix="/stock", tags=["stock"])
 
-VALID_TICKERS = {
-    "NVDA",
-    "TSMC",
-    "AAPL",
-    "MSFT",
-    "GOOGL",
-    "META",
-    "TSLA",
-    "AMD",
-    "INTC",
-    "AMZN",
-    "ASML",
-    "ARM",
-    "QCOM",
-    "AVGO",
-    "AMAT",
-}
+VALID_TICKERS = set(TRACKED_TICKERS)
 
 TickerPath = Path(
     ...,
-    description=f"One of the 15 tracked tickers (case-insensitive): {', '.join(sorted(VALID_TICKERS))}.",
+    description=f"One of the {len(TRACKED_TICKERS)} tracked tickers (case-insensitive): {', '.join(sorted(VALID_TICKERS))}.",
     examples=["NVDA"],
 )
 
@@ -121,8 +106,7 @@ def news(ticker: str = TickerPath):
     summary="Get latest MD&A from SEC 10-Q",
     description=(
         "Returns the Management's Discussion & Analysis section of the ticker's latest 10-Q filing, "
-        "parsed from SEC EDGAR and cached in Postgres. Fields are null for TSMC, which as a foreign "
-        "private issuer does not file a 10-Q."
+        "parsed from SEC EDGAR and cached in Postgres."
     ),
 )
 def mda(ticker: str = TickerPath):

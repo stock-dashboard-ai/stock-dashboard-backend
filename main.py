@@ -6,18 +6,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import stock, chat
 from routers.schemas import HealthResponse
 from data.embeddings import embed_all_tickers
+from data.tickers import TRACKED_TICKERS
 from utils.db import init_db
 
 load_dotenv()
-
-TICKERS = [
-    "NVDA",
-    "AAPL",
-    "MSFT",
-    "GOOGL",
-    "META",
-    "TSLA",
-]
 
 TAGS_METADATA = [
     {
@@ -34,7 +26,7 @@ TAGS_METADATA = [
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
-    asyncio.create_task(asyncio.to_thread(embed_all_tickers, TICKERS))
+    asyncio.create_task(asyncio.to_thread(embed_all_tickers, TRACKED_TICKERS))
     yield
 
 
