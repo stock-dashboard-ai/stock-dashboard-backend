@@ -21,14 +21,16 @@ class AgentState(TypedDict):
 
 def classify_node(state: AgentState) -> dict:
     messages = [
-        SystemMessage(content=(
-            "Classify what data is needed to answer a stock research question. "
-            "Reply with exactly one word: research, rag, or both.\n"
-            "- research: live data needed (current price, news, analyst ratings)\n"
-            "- rag: static documents needed (MD&A, financials from SEC filings)\n"
-            "- both: needs live data AND document context\n"
-            "When in doubt, reply: both"
-        )),
+        SystemMessage(
+            content=(
+                "Classify what data is needed to answer a stock research question. "
+                "Reply with exactly one word: research, rag, or both.\n"
+                "- research: live data needed (current price, news, analyst ratings)\n"
+                "- rag: static documents needed (MD&A, financials from SEC filings)\n"
+                "- both: needs live data AND document context\n"
+                "When in doubt, reply: both"
+            )
+        ),
         HumanMessage(content=state["query"]),
     ]
     try:
@@ -79,10 +81,16 @@ def synthesize_node(state: AgentState) -> dict:
         parts.append(f"[Document Context]\n{state['rag_context']}")
 
     messages: list[BaseMessage] = [
-        SystemMessage(content=(
-            f"You are a financial research assistant. Use the provided context about "
-            f"{state['ticker']} to answer the user's question accurately and concisely."
-        )),
+        SystemMessage(
+            content=(
+                # f"You are a financial research assistant. Use the provided context about "
+                # f"{state['ticker']} to answer the user's question accurately and concisely."
+                # 한국어 프롬프트
+                f"\n\n당신은 금융 연구 조수입니다. 제공된 {state['ticker']}에 대한 컨텍스트를 사용하여 "
+                f"사용자의 질문에 정확하고 간결하게 답변하고 텍스트에 없는 정보는 추가하지 마세요. "
+                f"답변은 한국어로 작성하고, 서론이나 도입 문구는 포함하지 마세요."
+            )
+        ),
     ]
 
     for turn in state.get("history", []):
@@ -91,7 +99,11 @@ def synthesize_node(state: AgentState) -> dict:
         elif turn.get("role") == "assistant":
             messages.append(AIMessage(content=turn["content"]))
 
-    messages.append(HumanMessage(content=f"Context:\n\n{chr(10).join(parts)}\n\nQuestion: {state['query']}"))
+    messages.append(
+        HumanMessage(
+            content=f"Context:\n\n{chr(10).join(parts)}\n\nQuestion: {state['query']}"
+        )
+    )
     try:
         response = get_llm(LLAMA4).invoke(messages)
     except Exception:
