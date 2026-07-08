@@ -42,7 +42,8 @@ def _summarize_mda(ticker: str, text: str) -> str:
         f"section from {ticker}'s latest 10-Q filing in 3-4 sentences for a stock "
         f"research dashboard. Focus on revenue, margins, and notable risks or "
         f"trends. Do not add information not present in the text. Output only "
-        f"the summary itself, with no preamble, introduction, or lead-in phrase."
+        f"the summary itself, with no preamble, introduction, or lead-in phrase. "
+        f"Write the summary in Korean."
         f"\n\nMD&A Full Text:\n{text}"
     )
     response = get_llm().invoke(prompt)
