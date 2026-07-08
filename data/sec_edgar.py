@@ -38,13 +38,19 @@ def _get_latest_10q_path(cik: int) -> tuple[str | None, str | None]:
 
 def _summarize_mda(ticker: str, text: str) -> str:
     prompt = (
-        f"Summarize the following Management's Discussion and Analysis (MD&A) "
-        f"section from {ticker}'s latest 10-Q filing in 3-4 sentences for a stock "
-        f"research dashboard. Focus on revenue, margins, and notable risks or "
-        f"trends. Do not add information not present in the text. Output only "
-        f"the summary itself, with no preamble, introduction, or lead-in phrase. "
-        f"Write the summary in Korean."
-        f"\n\nMD&A Full Text:\n{text}"
+        # f"Summarize the following Management's Discussion and Analysis (MD&A) "
+        # f"section from {ticker}'s latest 10-Q filing in 3-4 sentences for a stock "
+        # f"research dashboard. Focus on revenue, margins, and notable risks or "
+        # f"trends. Do not add information not present in the text. Output only "
+        # f"the summary itself, with no preamble, introduction, or lead-in phrase. "
+        # f"Write the summary in Korean."
+        # f"\n\nMD&A Full Text:\n{text}"
+        # 한국어 프롬프트
+        f"\n\n다음은 {ticker}의 최신 10-Q 보고서에서 발췌한 경영진의 토론 및 분석(MD&A) 섹션입니다. "
+        f"수익, 마진, 주목할 만한 위험 또는 추세에 초점을 맞춰 3-4문장으로 요약해 주세요. "
+        f"텍스트에 없는 정보는 추가하지 마세요. 요약문만 출력하고, 서론이나 도입 문구는 포함하지 마세요. "
+        f"요약문은 한국어로 작성해 주세요."
+        f"\n\nMD&A 전문:\n{text}"
     )
     response = get_llm().invoke(prompt)
     content = response.content
